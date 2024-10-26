@@ -1,7 +1,7 @@
 env:
   AZURE_REGISTRY_LOGIN_NAME: "acr20241024harry"
   AZURE_REGISTRY_LOGIN_SERVER: "acr20241024harry.azurecr.io"
-  CONTAINER_NAME: "Hello_world"
+  CONTAINER_NAME: "hello_world"
 
 on:
   push:
