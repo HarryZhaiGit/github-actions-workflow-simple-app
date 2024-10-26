@@ -1,12 +1,12 @@
-name: Build and Deploy to Azure
-
 env:
   AZURE_REGISTRY_LOGIN_NAME: "acr20241024harry"
   AZURE_REGISTRY_LOGIN_SERVER: "acr20241024harry.azurecr.io"
   CONTAINER_NAME: "Hello_world"
 
 on:
-  push: ["master"]
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -17,15 +17,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      -name: Checkout
-       uses: actions/checkout@v4.2.2
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
 
-      -name: Docker Setup Buildx
-       uses: docker/setup-buildx-action@v3.7.1
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v3.7.1
 
-      -name: Azure Container Registry Login
-       uses: Azure/docker-login@v1
-       with:
+      - name: Azure Container Registry Login
+        uses: Azure/docker-login@v1
+        with:
           # Container registry username
           username: ${{ env.AZURE_REGISTRY_LOGIN_NAME }}
           # Container registry password
@@ -33,11 +33,9 @@ jobs:
           # Container registry server url
           login-server: ${{ env.AZURE_REGISTRY_LOGIN_SERVER }}
 
-      -name: Build and push Docker images
-       uses: docker/build-push-action@v6.9.0
-       with:
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v6.9.0
+        with:
           push: true
           tags: ${{ env.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
           file: ./Dockerfile
-          
-          
