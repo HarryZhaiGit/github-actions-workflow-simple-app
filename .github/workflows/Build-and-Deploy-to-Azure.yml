@@ -1,7 +1,9 @@
 env:
-  AZURE_REGISTRY_LOGIN_NAME: "acr20241024harry"
-  AZURE_REGISTRY_LOGIN_SERVER: "acr20241024harry.azurecr.io"
+  AZURE_CONTAINER_REGISTRY_NAME: "acr20241024harry"
+  AZURE_CONTAINER_REGISTRY: "acr20241024harry.azurecr.io"
   CONTAINER_NAME: "hello_world"
+  RESOURCE_GROUP: "rg-github-actions-demo"
+  CLUSTER_NAME: "aks-harry-aue"
 
 on:
   push:
@@ -27,15 +29,72 @@ jobs:
         uses: Azure/docker-login@v1
         with:
           # Container registry username
-          username: ${{ env.AZURE_REGISTRY_LOGIN_NAME }}
+          username: ${{ env.AZURE_CONTAINER_REGISTRY_NAME }}
           # Container registry password
           password: ${{ secrets.AZURE_CONTAINER_REGISTRY_PASSWORD }}
           # Container registry server url
-          login-server: ${{ env.AZURE_REGISTRY_LOGIN_SERVER }}
+          login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v6.9.0
         with:
           push: true
-          tags: ${{ env.AZURE_REGISTRY_LOGIN_SERVER }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+          tags: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
           file: ./Dockerfile
+
+  deployToAKS:
+    runs-on: ubuntu-lastest
+
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+
+    environment: Production
+
+    needs: [buildContainerImage]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Azure Login
+        uses: Azure/login@v2.2.0
+        with: 
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup kubelogin
+        uses: Azure/use-kubelogin@v1
+
+      - name: Kubernetes Set Context
+        uses: Azure/k8s-set-context@v3.0 
+        with: 
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          admin: false
+
+      - name: envsubst-action
+        uses: danielr1996/envsubst-action@1.1.0
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          AZURE_CONTAINER_REGISTRY: ${{ env.AZURE_CONTAINER_REGISTRY }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+        with:
+          input:
+            kubernetes/hello-world-deployment.yaml
+          output:
+            hello-world-deployment.yaml
+
+      - name: Deploy to Kubernetes cluster
+        uses: Azure/k8s-deploy@v4.9
+        with:
+          actions: deploy
+          manifests:   
+            hello-world-deployment.yaml
+            kubernetes/hello-world-service.yaml
+          images: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+        
+      
+  
