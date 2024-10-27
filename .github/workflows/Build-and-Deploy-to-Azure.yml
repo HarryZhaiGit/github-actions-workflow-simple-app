@@ -70,7 +70,7 @@ jobs:
         with:
           kubelogin-version: 'v0.0.24'
 
-      - name: Kubernetes Set Context
+      - name: Get K8s Context
         uses: Azure/k8s-set-context@v3.0 
         with: 
           resource-group: ${{ env.RESOURCE_GROUP }}
