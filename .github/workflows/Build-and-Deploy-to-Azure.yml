@@ -75,7 +75,7 @@ jobs:
         with: 
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
-          admin: false
+          admin: 'false'
           use-kubelogin: 'true'
 
       - name: envsubst-action
