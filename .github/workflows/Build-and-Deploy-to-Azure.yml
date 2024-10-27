@@ -67,6 +67,8 @@ jobs:
 
       - name: Setup kubelogin
         uses: Azure/use-kubelogin@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Kubernetes Set Context
         uses: Azure/k8s-set-context@v3.0 
