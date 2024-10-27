@@ -43,7 +43,7 @@ jobs:
           file: ./Dockerfile
 
   deployToAKS:
-    runs-on: ubuntu-lastest
+    runs-on: ubuntu-latest
 
     permissions:
       actions: read
